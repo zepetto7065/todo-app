@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘 할 일</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cream: #F5F0E8;
+            --charcoal: #2C2C2C;
+            --terracotta: #C4725A;
+            --soft-gray: #8B8B8B;
+            --light-gray: #D9D4CC;
+            --shadow: rgba(44, 44, 44, 0.08);
+            --shadow-hover: rgba(44, 44, 44, 0.12);
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Paper grain texture */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(44, 44, 44, 0.015) 2px, rgba(44, 44, 44, 0.015) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(44, 44, 44, 0.015) 2px, rgba(44, 44, 44, 0.015) 4px);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid rgba(44, 44, 44, 0.08);
+            background: var(--cream);
+        }
+
+        .greeting {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 13px;
+            color: var(--soft-gray);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .date-nav button {
+            background: none;
+            border: none;
+            color: var(--charcoal);
+            cursor: pointer;
+            padding: 6px;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .date-nav button:hover {
+            background: rgba(196, 114, 90, 0.1);
+            color: var(--terracotta);
+        }
+
+        .date-nav button:active {
+            transform: scale(0.95);
+        }
+
+        .current-date {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .today-btn {
+            background: none;
+            border: 1px solid var(--light-gray);
+            color: var(--charcoal);
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .today-btn:hover {
+            background: var(--terracotta);
+            color: var(--cream);
+            border-color: var(--terracotta);
+        }
+
+        .today-btn.active {
+            background: rgba(196, 114, 90, 0.1);
+            border-color: var(--terracotta);
+            color: var(--terracotta);
+        }
+
+
+        /* Todo List */
+        .todos-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 32px;
+            scroll-behavior: smooth;
+        }
+
+        .todos-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .todos-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .todos-container::-webkit-scrollbar-thumb {
+            background: var(--light-gray);
+            border-radius: 3px;
+        }
+
+        .todos-container::-webkit-scrollbar-thumb:hover {
+            background: var(--soft-gray);
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 14px 0;
+            gap: 12px;
+            border-bottom: 1px solid rgba(44, 44, 44, 0.05);
+            animation: slideInUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .todo-item.removing {
+            animation: slideOutRight 0.3s ease forwards;
+        }
+
+        @keyframes slideOutRight {
+            to {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+        }
+
+        .todo-item.day-transition {
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Custom Checkbox */
+        .checkbox-wrapper {
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            padding: 2px;
+        }
+
+        .checkbox-input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .checkbox-circle {
+            width: 36px;
+            height: 36px;
+            border: 2.5px solid var(--light-gray);
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: transparent;
+        }
+
+        .checkbox-input:checked ~ .checkbox-circle {
+            border-color: var(--terracotta);
+            background: var(--terracotta);
+            animation: checkBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes checkBounce {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.15);
+            }
+        }
+
+        .checkbox-circle::after {
+            content: '';
+            position: absolute;
+            width: 13px;
+            height: 7px;
+            border-left: 2.5px solid var(--cream);
+            border-bottom: 2.5px solid var(--cream);
+            transform: rotate(-45deg) scale(0);
+            top: 10px;
+            left: 9px;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s;
+        }
+
+        .checkbox-input:checked ~ .checkbox-circle::after {
+            transform: rotate(-45deg) scale(1);
+        }
+
+        .todo-content {
+            flex: 1;
+            min-width: 0;
+            cursor: text;
+            padding-top: 2px;
+        }
+
+        .todo-title {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--charcoal);
+            transition: all 0.3s ease;
+            word-wrap: break-word;
+        }
+
+        .todo-item.completed .todo-title {
+            color: var(--soft-gray);
+            opacity: 0.6;
+            text-decoration: line-through;
+            text-decoration-color: var(--terracotta);
+            text-decoration-thickness: 1.5px;
+        }
+
+        .todo-description {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--soft-gray);
+            margin-top: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .todo-item.completed .todo-description {
+            opacity: 0.4;
+        }
+
+        /* Inline editing */
+        .todo-item.editing {
+            background: rgba(196, 114, 90, 0.04);
+            margin: 0 -12px;
+            padding: 14px 12px;
+            border-radius: 8px;
+        }
+
+        .edit-title-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--charcoal);
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            padding: 0;
+            border-bottom: 1px solid var(--terracotta);
+        }
+
+        .edit-desc-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--soft-gray);
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            padding: 0;
+            margin-top: 6px;
+            resize: none;
+            border-bottom: 1px solid var(--light-gray);
+            min-height: 24px;
+        }
+
+        .edit-hint {
+            font-size: 11px;
+            color: var(--light-gray);
+            margin-top: 6px;
+        }
+
+        .delete-btn {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--soft-gray);
+            cursor: pointer;
+            padding: 4px 6px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            border-radius: 4px;
+        }
+
+        .todo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            color: var(--terracotta);
+            background: rgba(196, 114, 90, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--soft-gray);
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .empty-state::before {
+            content: '✎';
+            display: block;
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 20px 32px 28px;
+            border-top: 1px solid rgba(44, 44, 44, 0.08);
+            background: var(--cream);
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .todo-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            padding: 14px 0;
+            color: var(--charcoal);
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+        }
+
+        .todo-input::placeholder {
+            color: var(--soft-gray);
+            opacity: 0.6;
+        }
+
+        .input-underline {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: var(--light-gray);
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .input-underline::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            height: 2px;
+            background: var(--terracotta);
+            width: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateX(-50%);
+        }
+
+        .todo-input:focus ~ .input-underline::after {
+            width: 100%;
+        }
+
+        .desc-input-wrapper {
+            position: relative;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            margin-bottom: 4px;
+        }
+
+        .desc-input-wrapper.visible {
+            max-height: 100px;
+            opacity: 1;
+        }
+
+        .desc-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            padding: 8px 0;
+            color: var(--soft-gray);
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            resize: none;
+            line-height: 1.5;
+            height: 38px;
+        }
+
+        .desc-input::placeholder {
+            color: var(--light-gray);
+        }
+
+        .desc-input-underline {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 1px;
+            background: var(--light-gray);
+            width: 100%;
+            opacity: 0.5;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--soft-gray);
+            padding: 0 2px;
+        }
+
+        .stats-left {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stats-number {
+            color: var(--terracotta);
+            font-weight: 500;
+        }
+
+        .add-hint {
+            opacity: 0.5;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="greeting" id="greeting">좋은 아침이에요</div>
+            <div class="date-nav">
+                <button id="prevDay" aria-label="Previous day">‹</button>
+                <div class="current-date" id="currentDate"></div>
+                <button id="nextDay" aria-label="Next day">›</button>
+            </div>
+            <button class="today-btn" id="todayBtn">오늘</button>
+        </div>
+
+        <div class="todos-container" id="todosContainer">
+            <div class="empty-state" id="emptyState">
+                오늘 할 일을<br>적어보세요
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input
+                    type="text"
+                    class="todo-input"
+                    id="todoInput"
+                    placeholder="새로운 할 일 추가..."
+                    autocomplete="off"
+                >
+                <div class="input-underline"></div>
+            </div>
+            <div class="desc-input-wrapper" id="descWrapper">
+                <textarea
+                    class="desc-input"
+                    id="descInput"
+                    placeholder="상세 내용 (선택사항)"
+                    rows="1"
+                ></textarea>
+                <div class="desc-input-underline"></div>
+            </div>
+            <div class="stats">
+                <div class="stats-left">
+                    <div class="stats-item">
+                        <span class="stats-number" id="remainingCount">0</span>
+                        <span>남은 일</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-number" id="completedCount">0</span>
+                        <span>완료</span>
+                    </div>
+                </div>
+                <div class="add-hint">Tab 상세 · Enter 추가</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentDate = new Date();
+        let todos = [];
+
+        // Elements
+        const greetingEl = document.getElementById('greeting');
+        const currentDateEl = document.getElementById('currentDate');
+        const todayBtn = document.getElementById('todayBtn');
+        const prevDayBtn = document.getElementById('prevDay');
+        const nextDayBtn = document.getElementById('nextDay');
+        const todosContainer = document.getElementById('todosContainer');
+        const emptyState = document.getElementById('emptyState');
+        const todoInput = document.getElementById('todoInput');
+        const descInput = document.getElementById('descInput');
+        const descWrapper = document.getElementById('descWrapper');
+        const remainingCountEl = document.getElementById('remainingCount');
+        const completedCountEl = document.getElementById('completedCount');
+
+        // Utility Functions
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatDisplayDate(date) {
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const dayOfWeek = days[date.getDay()];
+            return `${year}년 ${month}월 ${day}일 (${dayOfWeek})`;
+        }
+
+        function getGreeting() {
+            const hour = new Date().getHours();
+            if (hour < 12) return '좋은 아침이에요';
+            if (hour < 18) return '좋은 오후에요';
+            return '좋은 저녁이에요';
+        }
+
+        function isToday(date) {
+            const today = new Date();
+            return formatDate(date) === formatDate(today);
+        }
+
+        function getStorageKey(date) {
+            return `todo-${formatDate(date)}`;
+        }
+
+        // Storage Functions
+        function loadTodos() {
+            const key = getStorageKey(currentDate);
+            const stored = localStorage.getItem(key);
+            todos = stored ? JSON.parse(stored) : [];
+        }
+
+        function saveTodos() {
+            const key = getStorageKey(currentDate);
+            localStorage.setItem(key, JSON.stringify(todos));
+        }
+
+        // Render Functions
+        function renderTodos(withTransition = false) {
+            const todosList = todos.filter(t => !t.completed);
+            const completedList = todos.filter(t => t.completed);
+            const allTodos = [...todosList, ...completedList];
+
+            if (allTodos.length === 0) {
+                emptyState.style.display = 'block';
+                todosContainer.innerHTML = '';
+                todosContainer.appendChild(emptyState);
+            } else {
+                emptyState.style.display = 'none';
+                todosContainer.innerHTML = '';
+
+                allTodos.forEach(todo => {
+                    const todoEl = createTodoElement(todo, withTransition);
+                    todosContainer.appendChild(todoEl);
+                });
+            }
+
+            updateStats();
+        }
+
+        function createTodoElement(todo, withTransition = false) {
+            const div = document.createElement('div');
+            div.className = `todo-item ${todo.completed ? 'completed' : ''} ${withTransition ? 'day-transition' : ''}`;
+            div.dataset.id = todo.id;
+
+            const hasDesc = todo.description && todo.description.trim();
+            div.innerHTML = `
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" class="checkbox-input" ${todo.completed ? 'checked' : ''}>
+                    <span class="checkbox-circle"></span>
+                </label>
+                <div class="todo-content">
+                    <div class="todo-title">${escapeHtml(todo.text)}</div>
+                    ${hasDesc ? `<div class="todo-description">${escapeHtml(todo.description)}</div>` : ''}
+                </div>
+                <button class="delete-btn" aria-label="Delete">×</button>
+            `;
+
+            // Click to edit
+            const content = div.querySelector('.todo-content');
+            content.addEventListener('click', (e) => {
+                if (div.classList.contains('editing')) return;
+                startEditing(todo, div);
+            });
+
+            // Checkbox toggle
+            const checkbox = div.querySelector('.checkbox-input');
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                toggleTodo(todo.id);
+            });
+
+            // Delete button
+            const deleteBtn = div.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteTodo(todo.id, div);
+            });
+
+            return div;
+        }
+
+        function startEditing(todo, element) {
+            // Close any other editing items
+            document.querySelectorAll('.todo-item.editing').forEach(el => {
+                cancelEditing(el);
+            });
+
+            element.classList.add('editing');
+            const content = element.querySelector('.todo-content');
+            const hasDesc = todo.description && todo.description.trim();
+
+            content.innerHTML = `
+                <input type="text" class="edit-title-input">
+                <textarea class="edit-desc-input" placeholder="상세 내용 추가..."></textarea>
+                <div class="edit-hint">Enter 저장 · Esc 취소</div>
+            `;
+
+            const titleInput = content.querySelector('.edit-title-input');
+            const descTextarea = content.querySelector('.edit-desc-input');
+            titleInput.value = todo.text;
+            descTextarea.value = todo.description || '';
+            titleInput.focus();
+            titleInput.setSelectionRange(titleInput.value.length, titleInput.value.length);
+
+            function saveEdit() {
+                const newTitle = titleInput.value.trim();
+                if (!newTitle) return cancelEditing(element);
+                todo.text = newTitle;
+                todo.description = descTextarea.value.trim();
+                saveTodos();
+                renderTodos();
+            }
+
+            function cancelEditing(el) {
+                el.classList.remove('editing');
+                renderTodos();
+            }
+
+            titleInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+                if (e.key === 'Escape') { cancelEditing(element); }
+                if (e.key === 'Tab') { e.preventDefault(); descTextarea.focus(); }
+            });
+
+            descTextarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(); }
+                if (e.key === 'Escape') { cancelEditing(element); }
+            });
+
+            // Auto-resize description textarea
+            descTextarea.addEventListener('input', () => {
+                descTextarea.style.height = 'auto';
+                descTextarea.style.height = descTextarea.scrollHeight + 'px';
+            });
+            descTextarea.style.height = descTextarea.scrollHeight + 'px';
+
+            // Click outside to save
+            function onClickOutside(e) {
+                if (!element.contains(e.target)) {
+                    saveEdit();
+                    document.removeEventListener('click', onClickOutside);
+                }
+            }
+            setTimeout(() => document.addEventListener('click', onClickOutside), 10);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateStats() {
+            const remaining = todos.filter(t => !t.completed).length;
+            const completed = todos.filter(t => t.completed).length;
+            remainingCountEl.textContent = remaining;
+            completedCountEl.textContent = completed;
+        }
+
+        function updateHeader() {
+            greetingEl.textContent = getGreeting();
+            currentDateEl.textContent = formatDisplayDate(currentDate);
+
+            if (isToday(currentDate)) {
+                todayBtn.classList.add('active');
+            } else {
+                todayBtn.classList.remove('active');
+            }
+        }
+
+        // Todo Actions
+        function addTodo() {
+            const text = todoInput.value.trim();
+            if (!text) return;
+
+            const description = descInput.value.trim();
+            const newTodo = {
+                id: Date.now().toString(),
+                text: text,
+                description: description || '',
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+
+            todos.unshift(newTodo);
+            saveTodos();
+            renderTodos();
+            todoInput.value = '';
+            descInput.value = '';
+            descWrapper.classList.remove('visible');
+
+            // Scroll to top smoothly
+            todosContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveTodos();
+                renderTodos();
+            }
+        }
+
+        function deleteTodo(id, element) {
+            element.classList.add('removing');
+            setTimeout(() => {
+                todos = todos.filter(t => t.id !== id);
+                saveTodos();
+                renderTodos();
+            }, 300);
+        }
+
+        // Navigation
+        function changeDay(offset) {
+            const newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() + offset);
+            currentDate = newDate;
+            loadTodos();
+            updateHeader();
+            renderTodos(true);
+        }
+
+        function goToToday() {
+            if (!isToday(currentDate)) {
+                currentDate = new Date();
+                loadTodos();
+                updateHeader();
+                renderTodos(true);
+            }
+        }
+
+        // Event Listeners
+        todoInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTodo();
+            }
+            if (e.key === 'Tab' && todoInput.value.trim()) {
+                e.preventDefault();
+                descWrapper.classList.add('visible');
+                setTimeout(() => descInput.focus(), 50);
+            }
+        });
+
+        todoInput.addEventListener('input', () => {
+            if (!todoInput.value.trim()) {
+                descWrapper.classList.remove('visible');
+                descInput.value = '';
+            }
+        });
+
+        descInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                addTodo();
+            }
+            if (e.key === 'Escape') {
+                descInput.value = '';
+                descWrapper.classList.remove('visible');
+                todoInput.focus();
+            }
+            if (e.key === 'Backspace' && !descInput.value) {
+                descWrapper.classList.remove('visible');
+                todoInput.focus();
+            }
+        });
+
+        prevDayBtn.addEventListener('click', () => changeDay(-1));
+        nextDayBtn.addEventListener('click', () => changeDay(1));
+        todayBtn.addEventListener('click', goToToday);
+
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Left Arrow: Previous day
+            if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
+                e.preventDefault();
+                changeDay(-1);
+            }
+            // Ctrl/Cmd + Right Arrow: Next day
+            if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowRight') {
+                e.preventDefault();
+                changeDay(1);
+            }
+            // Ctrl/Cmd + T: Today
+            if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+                e.preventDefault();
+                goToToday();
+            }
+        });
+
+        // Initialize
+        function init() {
+            loadTodos();
+            updateHeader();
+            renderTodos();
+
+            // Focus input on load
+            setTimeout(() => todoInput.focus(), 100);
+        }
+
+        init();
+
+        // Update greeting every minute
+        setInterval(() => {
+            const newGreeting = getGreeting();
+            if (greetingEl.textContent !== newGreeting) {
+                greetingEl.textContent = newGreeting;
+            }
+        }, 60000);
+
+        // Auto-save every 5 minutes
+        setInterval(() => {
+            saveTodos();
+        }, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
