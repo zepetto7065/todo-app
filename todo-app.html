@@ -892,6 +892,7 @@
 
         // Event Listeners
         todoInput.addEventListener('keydown', (e) => {
+            if (e.isComposing) return;
             if (e.key === 'Enter') {
                 e.preventDefault();
                 addTodo();
