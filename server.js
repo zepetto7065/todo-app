@@ -17,7 +17,7 @@ if (!fs.existsSync(DATA_DIR)) {
 
 // Middleware
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Helper function to get file path for a date
 function getDataFilePath(date) {

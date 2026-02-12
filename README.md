@@ -17,18 +17,20 @@
 
 ## 설치 및 실행
 
-### npx로 바로 실행 (설치 없이)
+### npx로 바로 실행 (권장)
 
 ```bash
-npx simple-todo-app
+npx @olipas/simple-todo-app
 ```
 
 ### npm으로 글로벌 설치
 
 ```bash
-npm install -g simple-todo-app
-simple-todo
+npm install -g @olipas/simple-todo-app
+todo
 ```
+
+설치 후 `todo` 명령어로 실행하면 자동으로 브라우저가 열립니다.
 
 ### 로컬 개발 환경에서 실행
 
