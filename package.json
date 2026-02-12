@@ -1,0 +1,45 @@
+{
+  "name": "@olipas/simple-todo-app",
+  "version": "1.0.0",
+  "description": "미니멀한 디자인의 일별 할 일 관리 앱 - 로컬 파일 시스템에 데이터를 저장하는 간단한 Todo 앱",
+  "main": "server.js",
+  "bin": {
+    "simple-todo": "./bin/simple-todo.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "todo",
+    "todo-app",
+    "task",
+    "task-manager",
+    "productivity",
+    "daily-planner",
+    "minimalist",
+    "local-storage",
+    "cli"
+  ],
+  "author": "olipas",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zepetto7065/todo-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zepetto7065/todo-app/issues"
+  },
+  "homepage": "https://github.com/zepetto7065/todo-app#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "bin/",
+    "public/",
+    "server.js",
+    "README.md"
+  ]
+}

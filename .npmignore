@@ -1,0 +1,19 @@
+# Development files
+.idea/
+.git/
+.gitignore
+node_modules/
+
+# User data
+.simple-todo-app/
+
+# Test files
+test/
+*.test.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Original HTML (before conversion)
+todo-app.html

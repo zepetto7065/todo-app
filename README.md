@@ -1,13 +1,13 @@
 # 오늘 할 일
 
-미니멀한 디자인의 일별 할 일 관리 웹 앱입니다.
+미니멀한 디자인의 일별 할 일 관리 앱입니다.
 
 ## 주요 기능
 
 - **할 일 추가/수정/삭제** — 제목과 선택적 상세 설명을 함께 기록
 - **완료 체크** — 체크박스로 완료 상태 토글, 완료된 항목은 취소선 처리
 - **날짜별 관리** — 이전/다음 날짜 탐색으로 날짜별 할 일을 독립 관리
-- **자동 저장** — LocalStorage 기반으로 브라우저에 데이터 자동 저장
+- **로컬 파일 저장** — 날짜별로 JSON 파일로 저장되어 영구적으로 데이터 보존
 - **인라인 편집** — 할 일 클릭 시 바로 제목·설명 수정 가능
 - **키보드 단축키**
   - `Enter` — 할 일 추가
@@ -15,19 +15,52 @@
   - `Ctrl/Cmd + ←/→` — 이전/다음 날짜
   - `Ctrl/Cmd + T` — 오늘로 이동
 
-## 실행 방법
+## 설치 및 실행
 
-별도 빌드나 서버 없이 `todo-app.html` 파일을 브라우저에서 열면 바로 사용할 수 있습니다.
+### npx로 바로 실행 (설치 없이)
 
 ```bash
-open todo-app.html
+npx simple-todo-app
 ```
+
+### npm으로 글로벌 설치
+
+```bash
+npm install -g simple-todo-app
+simple-todo
+```
+
+### 로컬 개발 환경에서 실행
+
+```bash
+# 의존성 설치
+npm install
+
+# 서버 실행
+npm start
+```
+
+앱이 실행되면 자동으로 브라우저가 열리며 `http://localhost:3456`에서 접속 가능합니다.
+
+## 데이터 저장 위치
+
+모든 할 일 데이터는 사용자 홈 디렉토리에 날짜별 JSON 파일로 저장됩니다:
+
+```
+~/.simple-todo-app/
+  ├── 2026-02-12.json
+  ├── 2026-02-13.json
+  └── ...
+```
+
+각 JSON 파일은 해당 날짜의 모든 할 일을 포함하며, 파일을 직접 편집하거나 백업할 수 있습니다.
 
 ## 기술 스택
 
-- HTML / CSS / Vanilla JavaScript (단일 파일)
-- Google Fonts (Noto Serif JP, DM Sans)
-- LocalStorage API
+- **Backend**: Node.js, Express
+- **Frontend**: HTML / CSS / Vanilla JavaScript
+- **Storage**: 로컬 JSON 파일 (파일 시스템)
+- **Fonts**: Google Fonts (Noto Serif JP, DM Sans)
 
 ## 디자인
 
