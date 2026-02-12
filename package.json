@@ -1,10 +1,10 @@
 {
   "name": "@olipas/simple-todo-app",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "미니멀한 디자인의 일별 할 일 관리 앱 - 로컬 파일 시스템에 데이터를 저장하는 간단한 Todo 앱",
   "main": "server.js",
   "bin": {
-    "simple-todo": "./bin/simple-todo.js"
+    "todo": "./bin/simple-todo.js"
   },
   "scripts": {
     "start": "node server.js"
